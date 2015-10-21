@@ -19,7 +19,6 @@ namespace SIS
         /// <summary>
         /// ID of the product
         /// </summary>
-        [HideInInspector]
         public string productId;
 
         /// <summary>
@@ -101,7 +100,6 @@ namespace SIS
         /// <summary>
         /// type of in app purchase for this item
         /// </summary>
-        [HideInInspector]
         public IAPType type = IAPType.consumable;
 
 
