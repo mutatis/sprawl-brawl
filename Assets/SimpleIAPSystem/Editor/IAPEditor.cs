@@ -14,8 +14,7 @@ using System.Linq;
 namespace SIS
 {
     /// <summary>
-    /// IAP Settings editor for virtual ingame purchases.
-    /// Real money purchases require the import of a billing plugin!
+    /// IAP Settings editor.
     /// The one-stop solution for managing cross-platform IAP data.
     /// Found under Window > Simple IAP System > IAP Settings
     /// </summary>
@@ -78,9 +77,6 @@ namespace SIS
         {
             //reconnect reference
             if (iapEditor == null) iapEditor = this;
-            
-            //scene path
-            currentScene = EditorApplication.currentScene;
             //get reference to the shop and cache it
             shop = GameObject.FindObjectOfType(typeof(ShopManager)) as ShopManager;
 
@@ -178,8 +174,8 @@ namespace SIS
             List<Object> objs = new List<Object>() { script };
             if (shop != null) objs.Add(shop);
             Object[] undo = objs.ToArray();
-			Undo.RecordObjects(undo, "ChangedSettings");
- 
+            Undo.RecordObjects(undo, "ChangedSettings");
+                
             //display toolbar at the top, followed by a horizontal line
             toolbar = GUILayout.Toolbar(toolbar, toolbarStrings);
             GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));
@@ -225,10 +221,6 @@ namespace SIS
             GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();
 
-            this.ShowNotification(new GUIContent("Real money purchases are not supported!" +
-                                                 "\nImport a billing plugin if you want to use them." +
-                                                 "\n(see documentation)"));
-
             //begin a scrolling view inside this tab, pass in current Vector2 scroll position 
             scrollPosIAP = EditorGUILayout.BeginScrollView(scrollPosIAP, GUILayout.Height(350));
             GUILayout.Space(20);
@@ -238,6 +230,10 @@ namespace SIS
             {
                 //cache group
                 IAPGroup group = list[i];
+                //version 1.2 backwards compatibility fix (empty IAPGroup ids)
+                if (string.IsNullOrEmpty(group.id))
+                    group.id = GenerateUnixTime();
+
                 //populate shop container variables if ShopManager is present
                 Container shopGroup = null;
                 if (shop)
@@ -454,8 +450,6 @@ namespace SIS
         //draws the in game content editor
         void DrawIGC(List<IAPGroup> list)
         {
-            this.RemoveNotification();
-
             EditorGUILayout.BeginHorizontal();
             GUI.backgroundColor = Color.yellow;
 
@@ -580,6 +574,10 @@ namespace SIS
             {
                 //cache group
                 IAPGroup group = list[i];
+                //version 1.2 backwards compatibility fix (empty IAPGroup ids)
+                if (string.IsNullOrEmpty(group.id))
+                    group.id = GenerateUnixTime();
+
                 Container shopGroup = null;
                 if (shop)
                 {
@@ -923,8 +921,7 @@ namespace SIS
                 //we have to tell Unity that a value of our script has changed
                 //http://unity3d.com/support/documentation/ScriptReference/EditorUtility.SetDirty.html
                 if(shop) EditorUtility.SetDirty(shop);
-                //Register the snapshot state made with CreateSnapshot
-                //so the user can later undo back to that state
+
                 //repaint editor GUI window
                 Repaint();
             }
