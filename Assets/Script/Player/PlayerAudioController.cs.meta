@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 89f0446d7711e4d438df042a9dd3a111
+timeCreated: 1438624176
+licenseType: Free
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - soco: {fileID: 8300000, guid: d593a797fd999bc49b31dec1062767b5, type: 3}
+  - socoF: {fileID: 8300000, guid: 8e90f82bd307a7644bc3eebe53578898, type: 3}
+  - carrega: {fileID: 8300000, guid: b321aea5e68fa5e4f8de460b445cd229, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
