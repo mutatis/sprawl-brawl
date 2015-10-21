@@ -34,6 +34,10 @@ public class PlayerController : MonoBehaviour
 	bool attackPower;
 	bool attack;
     bool delayEsquiva;
+    bool downEsquerda;
+    bool upEsquerda;
+    bool downDireita;
+    bool upDireita;
 
 	public float lifeEnemy;
 
@@ -96,7 +100,7 @@ public class PlayerController : MonoBehaviour
 
         if (isAttack)
         {
-            if (Input.GetKeyDown(KeyCode.RightArrow) && !esquiva && !attack)
+            if ((Input.GetKeyDown(KeyCode.RightArrow) || (downDireita && !upDireita)) && !esquiva && !attack)
             {
                 velX = 0;
                 prepareAttack = true;
@@ -106,7 +110,7 @@ public class PlayerController : MonoBehaviour
             {
 
             }
-            else if (Input.GetKeyDown(KeyCode.LeftArrow) && !attack && !delayEsquiva && !prepareAttack)
+            else if ((Input.GetKeyDown(KeyCode.LeftArrow) || (downEsquerda && !upEsquerda)) && !attack && !delayEsquiva && !prepareAttack)
             {
                 isAttack = false;
                 Defesa();
@@ -116,8 +120,12 @@ public class PlayerController : MonoBehaviour
                 StartCoroutine("Delay");
 				StopCoroutine("HeavyAttack");
                 audioController.Sprawl();
+                downDireita = false;
+                downEsquerda = false;
+                upDireita = false;
+                upEsquerda = false;
             }
-            else if (Input.GetKeyUp(KeyCode.RightArrow) && !esquiva && !attackPower)
+            else if ((Input.GetKeyUp(KeyCode.RightArrow) || (upDireita && !downDireita)) && !esquiva && !attackPower)
             {
                 isAttack = false;
                 prepareAttack = false;
@@ -133,6 +141,10 @@ public class PlayerController : MonoBehaviour
                 anim.SetTrigger("Attack");
                 attack = true;
                 StopCoroutine("HeavyAttack");
+                downDireita = false;
+                downEsquerda = false;
+                upDireita = false;
+                upEsquerda = false;
             }
             /*else if(fight)
 		    {
@@ -164,6 +176,38 @@ public class PlayerController : MonoBehaviour
     {
         yield return new WaitForSeconds(2f);
         delayEsquiva = false;
+    }
+
+    public void DownDireita()
+    {
+        downDireita = true;
+        downEsquerda = false;
+        upDireita = false;
+        upEsquerda = false;
+    }
+
+    public void DownEsquerda()
+    {
+        downEsquerda = true;
+        downDireita = false;
+        upEsquerda = false;
+        upDireita = false;
+    }
+
+    public void UpDireita()
+    {
+        upDireita = true;
+        upEsquerda = false;
+        downDireita = false;
+        downEsquerda = false;
+    }
+
+    public void UpEsquerda()
+    {
+        upEsquerda = true;
+        upDireita = false;
+        downEsquerda = false;
+        downDireita = false;
     }
 
 	//tomo dano	
@@ -296,7 +340,11 @@ public class PlayerController : MonoBehaviour
         //temporario
         AttackF();
 		anim.SetTrigger("HeavyAttack");
-		StopCoroutine ("HeavyAttack");
+        upEsquerda = false;
+        upDireita = false;
+        downEsquerda = false;
+        downDireita = false;
+        StopCoroutine ("HeavyAttack");
 		attackPower = false;
     }
 
