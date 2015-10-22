@@ -106,7 +106,7 @@ public class PlayerController : MonoBehaviour
                 prepareAttack = true;
                 StartCoroutine("HeavyAttack");
             }
-            else if(Input.GetKey(KeyCode.RightArrow) || (downDireita && !upDireita))
+            else if(Input.GetKey(KeyCode.RightArrow))
             {
 
             }
