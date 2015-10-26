@@ -71,6 +71,9 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
+            stop = false;
+            fight = false;
+            velX = 3;
             isAttack = true;
         }
 
