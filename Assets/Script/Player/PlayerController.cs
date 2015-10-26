@@ -69,6 +69,10 @@ public class PlayerController : MonoBehaviour
             velX = 0;
 			lifeEnemy = obj.GetComponent<Enemy>().life;
         }
+        else
+        {
+            isAttack = true;
+        }
 
         if (rig.velocity.x < 0)
 		{
