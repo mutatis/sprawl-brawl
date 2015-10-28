@@ -74,7 +74,6 @@ public class PlayerController : MonoBehaviour
             stop = false;
             fight = false;
             velX = 3;
-            isAttack = true;
         }
 
         if (rig.velocity.x < 0)
@@ -112,7 +111,7 @@ public class PlayerController : MonoBehaviour
                 velX = 0;
                 prepareAttack = true;
                 StartCoroutine("HeavyAttack");
-                audioController.Carrega();
+                audioController.StartCoroutine("PlayCarrega");
             }
             else if(Input.GetKey(KeyCode.RightArrow))
             {
@@ -133,7 +132,7 @@ public class PlayerController : MonoBehaviour
                 upDireita = false;
                 upEsquerda = false;
             }
-            else if ((Input.GetKeyUp(KeyCode.RightArrow) || (upDireita && !downDireita)) && !esquiva && !attackPower)
+            else if (((Input.GetKeyUp(KeyCode.RightArrow)) || (upDireita && !downDireita)) && !esquiva && !attackPower)
             {
                 isAttack = false;
                 prepareAttack = false;
@@ -149,6 +148,7 @@ public class PlayerController : MonoBehaviour
                 anim.SetTrigger("Attack");
                 attack = true;
                 StopCoroutine("HeavyAttack");
+                audioController.StopCoroutine("PlayCarrega");
                 downDireita = false;
                 downEsquerda = false;
                 upDireita = false;

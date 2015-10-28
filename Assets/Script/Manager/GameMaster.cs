@@ -18,13 +18,13 @@ public class GameMaster : MonoBehaviour
 
     void Update()
     {
-        if (Time.timeScale == 0 && audio.volume > 0.3f)
+        /*if (Time.timeScale == 0 && audio.volume > 0.3f)
         {
             audio.volume -= 0.01f;
         }
         else if(Time.timeScale == 1 && audio.volume < 1)
         {
             audio.volume += 0.01f;
-        }
+        }*/
     }
 }

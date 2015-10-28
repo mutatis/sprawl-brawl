@@ -112,6 +112,12 @@ public class PlayerAudioController : MonoBehaviour
         }
     }
 
+    public IEnumerator PlayCarrega()
+    {
+        yield return new WaitForSeconds(0.2f);
+        Carrega();
+    }
+
     //som do sprawl
     public void Sprawl()
     {
