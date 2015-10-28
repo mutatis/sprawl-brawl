@@ -112,6 +112,7 @@ public class PlayerController : MonoBehaviour
                 velX = 0;
                 prepareAttack = true;
                 StartCoroutine("HeavyAttack");
+                audioController.Carrega();
             }
             else if(Input.GetKey(KeyCode.RightArrow))
             {
