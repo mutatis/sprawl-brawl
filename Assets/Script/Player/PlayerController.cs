@@ -154,6 +154,10 @@ public class PlayerController : MonoBehaviour
                 upDireita = false;
                 upEsquerda = false;
             }
+            else
+            {
+                isAttack = true;
+            }
             /*else if(fight)
 		    {
 			    velX = temp / 2;
