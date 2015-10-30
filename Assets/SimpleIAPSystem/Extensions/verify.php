@@ -4,8 +4,8 @@ $store = $_POST['store'];   //store to verify against (IOS or Android)
 $pid = $_POST['pid'];   //product_id (iOS) - productId (Android)
 $tid = $_POST['tid'];   //orderId (Android)
 $rec = $_POST['rec'];   //receipt data (iOS) - purchase token (Android)
-$ios_bid = 'com.reboundgames.SimpleIAPSystem';  //bundle identifier for this app (iOS)
-$android_bid = 'com.baronium3d.IAPSystem'; //bundle identifier for this app (Android)
+$ios_bid = 'IOS BUNDLE IDENTIFIER';  //bundle identifier for this app (iOS)
+$android_bid = 'ANDROID BUNDLE IDENTIFIER'; //bundle identifier for this app (Android)
 
 if(!isset($store))
 {
@@ -25,7 +25,7 @@ elseif($store == 'Android')
 
 function verifyReceiptIOS($receipt, $sandbox)
 {
-    $secret = 'ef73e51319ba483aa4dcba9ff2401366';
+    $secret = 'YOUR SHARED SECRET';
 
     if ($sandbox)
     {
@@ -144,7 +144,7 @@ function verifyReceiptAndroid($receipt)
     if($type == 'androidpublisher#subscriptionPurchase')
     {
         $expiration = $response->{'validUntilTimestampMsec'};
-        if($time > $expiration)
+        if($time * 1000 > $expiration)
         {
             echo 'false';
         }
@@ -174,9 +174,9 @@ function verifyReceiptAndroid($receipt)
 
 function requestAccessTokenAndroid($path)
 {
-    $refresh = '1/txczbamxR5TL17lHIrtVv11XKxZkzkUHJa57SEURhKI';
-    $client_id = '850932468277.apps.googleusercontent.com';
-    $client_secret = 'prBFLJsQC01PZabOZO8mQzBv';
+    $refresh = 'YOUR REFRESH TOKEN';
+    $client_id = 'YOUR GOOGLE CLOUD CONSOLE ID';
+    $client_secret = 'YOUR CLIENT SECRET';
 
     $url = 'https://accounts.google.com/o/oauth2/token';
 

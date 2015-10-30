@@ -18,6 +18,7 @@ namespace SIS
             OpenIAB,
             Prime31,
             StansAssets,
+            VoxelBusters,
             Unibill,
             NoBilling
         }
@@ -74,6 +75,9 @@ namespace SIS
                         break;
                     case Packages.StansAssets:
                         Application.OpenURL("https://www.assetstore.unity3d.com/#/publisher/2256");
+                        break;
+                    case Packages.VoxelBusters:
+                        Application.OpenURL("https://www.assetstore.unity3d.com/en/#!/publisher/11527");
                         break;
                     case Packages.Unibill:
                         Application.OpenURL("https://www.assetstore.unity3d.com/#/content/5767");
