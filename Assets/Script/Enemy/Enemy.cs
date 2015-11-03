@@ -67,7 +67,7 @@ public class Enemy : MonoBehaviour
 	{
 		dist = Vector3.Distance(PlayerController.player.transform.position, transform.position);
 
-        if(life <= 0)
+        if (life <= 0)
         {
             anim.SetBool("Kill", true);
         }
@@ -374,19 +374,19 @@ public class Enemy : MonoBehaviour
 
 			intervalo = false;
 
-			switch(selectAttack)
-			{
+            switch (selectAttack)
+            {
                 //nao faz nada
-				case 0:
-					if(dist <= distanciaSD && !fight)
-					{
-						velX = 0;
-						anim.SetFloat("VelX", 0);
-						anim.SetTrigger("Idle");
-                        Combat ();
-					}
-					
-					/*if(dist > distanciaSD && !fight)
+                case 0:
+                    if (dist <= distanciaSD && !fight)
+                    {
+                        velX = 0;
+                        anim.SetFloat("VelX", 0);
+                        anim.SetTrigger("Idle");
+                        Combat();
+                    }
+
+                    /*if(dist > distanciaSD && !fight)
 					{
 						velX = temp;
 						transform.Translate(velX * Time.deltaTime, 0, 0);
@@ -395,8 +395,8 @@ public class Enemy : MonoBehaviour
 					{
 						velX = 0;
 					}*/
-					if(numAttack != 4)
-						numAttack = 4;
+                    if (numAttack != 4)
+                        numAttack = 4;
 
                     if (!umaVez)
                     {
@@ -405,39 +405,15 @@ public class Enemy : MonoBehaviour
                     }
                     //StartCoroutine("SelectAttack");
                     break;
-					
-                    //soca
-				case 1:
-					if(!intervalo)
-					{
-					    //anim.SetTrigger("PAttack");
-						//yield return new WaitForSeconds(1f);
-						Attack ();
-						anim.SetTrigger("Attack");
-                        intervalo = true;
-					}
-                    if (dist <= distanciaSD && !fight)
-                    {
-                        velX = 0;
-                        anim.SetFloat("VelX", 0);
-                        Combat();
-                    }
-					if (numAttack != 4)
-						numAttack = 4;
 
-                    if (!umaVez)
+                //soca
+                case 1:
+                    if (!intervalo)
                     {
-                        PP();
-                        umaVez = true;
-                    }
-                    //StartCoroutine("SelectAttack");
-                    break;
-					
-                    //defende
-				case 2:
-					if(!intervalo)
-					{
-						anim.SetTrigger("Defesa");
+                        //anim.SetTrigger("PAttack");
+                        //yield return new WaitForSeconds(1f);
+                        Attack();
+                        anim.SetTrigger("Attack");
                         intervalo = true;
                     }
                     if (dist <= distanciaSD && !fight)
@@ -446,8 +422,8 @@ public class Enemy : MonoBehaviour
                         anim.SetFloat("VelX", 0);
                         Combat();
                     }
-					if (numAttack != 4)
-						numAttack = 4;
+                    if (numAttack != 4)
+                        numAttack = 4;
 
                     if (!umaVez)
                     {
@@ -457,7 +433,31 @@ public class Enemy : MonoBehaviour
                     //StartCoroutine("SelectAttack");
                     break;
 
-                    //mid takedown
+                //defende
+                case 2:
+                    if (!intervalo)
+                    {
+                        anim.SetTrigger("Defesa");
+                        intervalo = true;
+                    }
+                    if (dist <= distanciaSD && !fight)
+                    {
+                        velX = 0;
+                        anim.SetFloat("VelX", 0);
+                        Combat();
+                    }
+                    if (numAttack != 4)
+                        numAttack = 4;
+
+                    if (!umaVez)
+                    {
+                        PP();
+                        umaVez = true;
+                    }
+                    //StartCoroutine("SelectAttack");
+                    break;
+
+                //mid takedown
                 case 3:
                     anim.SetTrigger("Jump");
                     rig.velocity = new Vector2(10, 3.7f);
@@ -472,16 +472,15 @@ public class Enemy : MonoBehaviour
                     bla = true;
                     ReCombat();
                     selectTakedown = 0;
-                        //Random.Range(0, 4);
+                    //Random.Range(0, 4);
                     selectAttack = 0;
-					if (numAttack != 3)
-						numAttack = 3;
+                    if (numAttack != 3)
+                        numAttack = 3;
                     StopCoroutine("SelectAttack");
                     break;
-			}
-			
-		}
-	}
+            }
+        }
+    }
 
     public void PP()
     {

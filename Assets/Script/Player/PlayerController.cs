@@ -38,6 +38,7 @@ public class PlayerController : MonoBehaviour
     bool upEsquerda;
     bool downDireita;
     bool upDireita;
+    bool coisa;
 
 	public float lifeEnemy;
 
@@ -64,13 +65,22 @@ public class PlayerController : MonoBehaviour
             }
         }*/
 
-        if(obj != null)
+        if (obj != null && coisa == true)
         {
             velX = 0;
 			lifeEnemy = obj.GetComponent<Enemy>().life;
+            StopPlayer();
+            anim.SetTrigger("Idle");
+            coisa = false;
         }
-        else
+        else if(obj != null)
         {
+            velX = 0;
+            anim.SetFloat("VelX", velX);
+        }
+        else if(obj == null)
+        {
+            coisa = true;
             stop = false;
             fight = false;
             velX = 3;
