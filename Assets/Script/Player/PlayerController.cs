@@ -137,10 +137,7 @@ public class PlayerController : MonoBehaviour
                 StartCoroutine("Delay");
 				StopCoroutine("HeavyAttack");
                 audioController.Sprawl();
-                downDireita = false;
-                downEsquerda = false;
-                upDireita = false;
-                upEsquerda = false;
+                TudoFalso();
             }
             else if (((Input.GetKeyUp(KeyCode.RightArrow)) || (upDireita && !downDireita)) && !esquiva && !attackPower)
             {
@@ -159,10 +156,7 @@ public class PlayerController : MonoBehaviour
                 attack = true;
                 StopCoroutine("HeavyAttack");
                 audioController.StopCoroutine("PlayCarrega");
-                downDireita = false;
-                downEsquerda = false;
-                upDireita = false;
-                upEsquerda = false;
+                TudoFalso();
             }
             else
             {
@@ -198,6 +192,14 @@ public class PlayerController : MonoBehaviour
     {
         yield return new WaitForSeconds(2f);
         delayEsquiva = false;
+    }
+
+    public void TudoFalso()
+    {
+        downDireita = false;
+        downEsquerda = false;
+        upDireita = false;
+        upEsquerda = false;
     }
 
     public void DownDireita()

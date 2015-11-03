@@ -412,7 +412,7 @@ public class Enemy : MonoBehaviour
                     {
                         //anim.SetTrigger("PAttack");
                         //yield return new WaitForSeconds(1f);
-                        Attack();
+                        //Attack();
                         anim.SetTrigger("Attack");
                         intervalo = true;
                     }
