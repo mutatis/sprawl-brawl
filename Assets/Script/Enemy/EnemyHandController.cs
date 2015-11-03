@@ -6,50 +6,61 @@ Sempre q o inimigo chamar um animacao nova chama uma funcao dessa */
 
 public class EnemyHandController : MonoBehaviour
 {
-    public Animator anim;
+    public Animator animHand;
+
+    public GameObject obj;
 
     public void RunHand()
     {
-        anim.SetTrigger("Run");
+        obj.SetActive(false);
+        animHand.SetTrigger("Run");
     }
 
     public void DanoHand()
     {
-        anim.SetTrigger("Dano");
+        obj.SetActive(true);
+        animHand.SetTrigger("Dano");
     }
 
     public void DefesaHand()
     {
-        anim.SetTrigger("Defesa");
+        obj.SetActive(true);
+        animHand.SetTrigger("Defesa");
     }
 
     public void PAttackHand()
     {
-        anim.SetTrigger("Pattack");
+        obj.SetActive(false);
+        animHand.SetTrigger("Pattack");
     }
 
     public void SprawlHand()
     {
-        anim.SetTrigger("Sprawl");
+        obj.SetActive(true);
+        animHand.SetTrigger("Sprawl");
     }
 
     public void KillHand()
     {
-        anim.SetTrigger("Kill");
+        obj.SetActive(true);
+        animHand.SetTrigger("Kill");
     }
 
     public void AttackHand()
     {
-        anim.SetTrigger("Attack");
+        obj.SetActive(false);
+        animHand.SetTrigger("Attack");
     }
 
     public void IdleHand()
     {
-        anim.SetTrigger("Idle");
+        obj.SetActive(true);
+        animHand.SetTrigger("Idle");
     }
 
     public void JumpHand()
     {
-        anim.SetTrigger("Jump");
+        obj.SetActive(true);
+        animHand.SetTrigger("Jump");
     }
 }
