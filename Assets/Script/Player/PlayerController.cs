@@ -116,7 +116,7 @@ public class PlayerController : MonoBehaviour
 
         if (isAttack)
         {
-            if ((Input.GetKeyDown(KeyCode.RightArrow) || (downDireita && !upDireita)) && !esquiva && !attack)
+            if ((Input.GetKeyDown(KeyCode.RightArrow) || (downDireita && !upDireita) || (Input.GetKeyDown(KeyCode.Joystick1Button0))) && !esquiva && !attack)
             {
                 velX = 0;
                 prepareAttack = true;
@@ -127,7 +127,7 @@ public class PlayerController : MonoBehaviour
             {
 
             }
-            else if ((Input.GetKeyDown(KeyCode.LeftArrow) || (downEsquerda && !upEsquerda)) && !attack && !delayEsquiva && !prepareAttack)
+            else if ((Input.GetKeyDown(KeyCode.LeftArrow) || (downEsquerda && !upEsquerda) || (Input.GetKeyDown(KeyCode.Joystick1Button2))) && !attack && !delayEsquiva && !prepareAttack)
             {
                 isAttack = false;
                 Defesa();
@@ -139,7 +139,7 @@ public class PlayerController : MonoBehaviour
                 audioController.Sprawl();
                 TudoFalso();
             }
-            else if (((Input.GetKeyUp(KeyCode.RightArrow)) || (upDireita && !downDireita)) && !esquiva && !attackPower)
+            else if (((Input.GetKeyUp(KeyCode.RightArrow)) || (upDireita && !downDireita) || (Input.GetKeyUp(KeyCode.Joystick1Button0))) && !esquiva && !attackPower)
             {
                 isAttack = false;
                 prepareAttack = false;
