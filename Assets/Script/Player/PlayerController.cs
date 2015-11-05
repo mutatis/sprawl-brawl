@@ -9,6 +9,8 @@ public class PlayerController : MonoBehaviour
 
     public PlayerAudioController audioController;
 
+    public Sombra sombra;
+
 	public Animator anim;
 
 	public Rigidbody2D rig;
@@ -186,6 +188,11 @@ public class PlayerController : MonoBehaviour
 			}
 		}*/
 	}
+
+    public void Aumenta()
+    {
+        sombra.Aumenta();
+    }
 
 	//temp  o de intervalo entre a esquiva para nao ficar usando direto
     IEnumerator Delay()

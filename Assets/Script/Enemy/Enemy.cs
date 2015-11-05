@@ -172,6 +172,7 @@ public class Enemy : MonoBehaviour
                             else
                             {
                                 PlayerController.player.anim.SetTrigger("Sprawl");
+                                PlayerController.player.Aumenta();
                                 PlayerController.player.isEsquiva = true;
                                 anim.SetFloat("VelX", 0);
                                 anim.SetTrigger("Idle");
