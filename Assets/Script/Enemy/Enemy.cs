@@ -366,7 +366,7 @@ public class Enemy : MonoBehaviour
 		StartCoroutine ("SelectAttack");
         escolha = 1;
 		ReCombat ();
-		rig.velocity = new Vector2 (7, 3.7f);
+		rig.velocity = new Vector2 (11, 3.7f);
         anim.SetTrigger("Jump");
         handControll.SetTrigger("Jump");
         Kill();
