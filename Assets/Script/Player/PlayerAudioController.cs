@@ -89,6 +89,7 @@ public class PlayerAudioController : MonoBehaviour
     //som de socoForte
     public void SocoForte()
     {
+        PlayerController.player.soco = true;
         Destroy(GameObject.FindGameObjectWithTag("Carrega"));
         if (PlayerController.player.obj != null)
         {

@@ -23,6 +23,7 @@ public class PlayerController : MonoBehaviour
 	public bool prepareAttack;
 	public bool esquiva;
     public bool isAttack = true;
+    public bool soco;
 
     public int life;
 
@@ -141,7 +142,7 @@ public class PlayerController : MonoBehaviour
                 audioController.Sprawl();
                 TudoFalso();
             }
-            else if (((Input.GetKeyUp(KeyCode.RightArrow)) || (upDireita && !downDireita) || (Input.GetKeyUp(KeyCode.Joystick1Button0))) && !esquiva && !attackPower)
+            else if (((Input.GetKeyUp(KeyCode.RightArrow)) || (upDireita && !downDireita) || (Input.GetKeyUp(KeyCode.Joystick1Button0))) && !esquiva && !attackPower && !soco)
             {
                 isAttack = false;
                 prepareAttack = false;
@@ -382,6 +383,7 @@ public class PlayerController : MonoBehaviour
 	//paro chute forte no meio
 	public void StopHeavyAttack()
     {
+        soco = false;
         attackPower = false;
         isAttack = true;
     }
