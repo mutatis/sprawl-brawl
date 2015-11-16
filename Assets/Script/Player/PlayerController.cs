@@ -42,6 +42,7 @@ public class PlayerController : MonoBehaviour
     bool downDireita;
     bool upDireita;
     bool coisa;
+    bool isDano;
 
 	public float lifeEnemy;
 
@@ -119,7 +120,7 @@ public class PlayerController : MonoBehaviour
 
         if (isAttack)
         {
-            if ((Input.GetKeyDown(KeyCode.RightArrow) || (downDireita && !upDireita) || (Input.GetKeyDown(KeyCode.Joystick1Button0))) && !esquiva && !attack)
+            if ((Input.GetKeyDown(KeyCode.RightArrow) || (downDireita && !upDireita) || (Input.GetKeyDown(KeyCode.Joystick1Button0))) && !esquiva && !attack && !isDano)
             {
                 velX = 0;
                 prepareAttack = true;
@@ -130,7 +131,7 @@ public class PlayerController : MonoBehaviour
             {
 
             }
-            else if ((Input.GetKeyDown(KeyCode.LeftArrow) || (downEsquerda && !upEsquerda) || (Input.GetKeyDown(KeyCode.Joystick1Button2))) && !attack && !delayEsquiva && !prepareAttack)
+            else if ((Input.GetKeyDown(KeyCode.LeftArrow) || (downEsquerda && !upEsquerda) || (Input.GetKeyDown(KeyCode.Joystick1Button2))) && !attack && !delayEsquiva && !prepareAttack && !isDano)
             {
                 isAttack = false;
                 Defesa();
@@ -142,7 +143,7 @@ public class PlayerController : MonoBehaviour
                 audioController.Sprawl();
                 TudoFalso();
             }
-            else if (((Input.GetKeyUp(KeyCode.RightArrow)) || (upDireita && !downDireita) || (Input.GetKeyUp(KeyCode.Joystick1Button0))) && !esquiva && !attackPower && !soco)
+            else if (((Input.GetKeyUp(KeyCode.RightArrow)) || (upDireita && !downDireita) || (Input.GetKeyUp(KeyCode.Joystick1Button0))) && !esquiva && !attackPower && !soco && !isDano)
             {
                 isAttack = false;
                 prepareAttack = false;
@@ -245,15 +246,20 @@ public class PlayerController : MonoBehaviour
 	//tomo dano	
     public void Dano()
     {
-        gameObject.GetComponent<SpriteRenderer>().color = Color.red;
-        StartCoroutine("Normal");
+        StopCoroutine("HeavyAttack");
+        audioController.StopCoroutine("PlayCarrega");
+        TudoFalso();
+        anim.SetTrigger("Dano");
+        isDano = true;
+        //gameObject.GetComponent<SpriteRenderer>().color = Color.red;
+       // StartCoroutine("Normal");
     }
 
 	//fim do dano
-    IEnumerator Normal()
+    public void Normal()
     {
-        yield return new WaitForSeconds(0.3f);
-        gameObject.GetComponent<SpriteRenderer>().color = Color.white;
+        isDano = false;
+       // anim.SetTrigger("Idle");
     }
 
 	//nao ataca enquanto toma dano

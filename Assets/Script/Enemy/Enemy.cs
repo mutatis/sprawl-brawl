@@ -11,6 +11,8 @@ public class Enemy : MonoBehaviour
         
 	public Rigidbody2D rig;
 
+    public GameObject hand;
+
 	public float velX = -1.5f;
 	//distancia para socar ou defender
 	public float distanciaSD;
@@ -47,16 +49,18 @@ public class Enemy : MonoBehaviour
     bool atacatroll;
     bool dano;
     bool umaVez;
+    bool troll;
 
 	void Start()
 	{
         temp = velX;
 		anim.SetFloat ("VelX", velX);
         handControll.SetFloat("VelX", velX);
-        escolha = Random.Range (0, 2);
+        escolha = 0;//Random.Range (0, 2);
 		if(escolha == 0)
 		{
-            selectTakedown = probabilidade.ChooseTakedown();
+            selectTakedown = 0;
+                //probabilidade.ChooseTakedown();
                 //Random.Range(0, 3);
 		}
 		else
@@ -64,6 +68,7 @@ public class Enemy : MonoBehaviour
             selectAttack = 0;
 				//Random.Range(0, 2);
 		}
+        StartCoroutine("ChooseTroll");
 	}
 
 	void Update()
@@ -89,13 +94,20 @@ public class Enemy : MonoBehaviour
                 //escolhe o ataque
                 atacatroll = true;
                 int prob = Random.Range(0, 10);
-                if (prob == 3)
+                if (troll)
                 {
-                    handControll.SetTrigger("Attack");
-                    selectAttack = 1;
-                    Attack();
-                    anim.SetTrigger("Attack");
-                    intervalo = true;
+                    StopCoroutine("ChooseTroll");
+                    StartCoroutine("ChooseTroll");
+                    if (prob == 3)
+                    {
+                        print(prob);
+                        handControll.SetTrigger("Attack");
+                        selectAttack = 1;
+                        Attack();
+                        anim.SetTrigger("Attack");
+                        intervalo = true;
+                    }
+                    troll = false;
                 }
                 atacatroll = false;
             }
@@ -161,6 +173,7 @@ public class Enemy : MonoBehaviour
                             anim.SetTrigger("Sprawl");
                             handControll.SetFloat("VelX", velX);
                             handControll.SetTrigger("Sprawl");
+                            hand.gameObject.GetComponent<SpriteRenderer>().enabled = false;
                         }
                         else if (dist <= distanciaSD || obj != null)
                         {
@@ -339,6 +352,12 @@ public class Enemy : MonoBehaviour
 		}
 	}
 
+    IEnumerator ChooseTroll()
+    {
+        yield return new WaitForSeconds(4);
+        troll = true;
+    }
+
 	//tomo chute e fico tonto
     public void Stun()
     {
@@ -348,9 +367,19 @@ public class Enemy : MonoBehaviour
         StartCoroutine("SelectAttack");
         ReCombat();
     }
-
-	//acerto o takedown
+    
+    //acerto o takedown
     void Sprawl()
+    {
+        if (!anim.GetBool("Takedown"))
+        {
+            hand.SetActive(false);
+            PlayerController.player.gameObject.GetComponent<SpriteRenderer>().enabled = false;
+            anim.SetBool("Takedown", true);
+        }
+    }
+
+    public void GameOver()
     {
         while (PlayerController.player.life > 0)
         {
