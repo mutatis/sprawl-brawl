@@ -17,6 +17,17 @@ public class FollowTarget : MonoBehaviour
 	void FixedUpdate ()
 	{
       /*  if (PlayerController.player.velX > 0)
+        {
+            xPosition = target.position.x + offset.x;
+            yPosition = offset.y;
+            transform.position = Vector3.SmoothDamp(transform.position, new Vector3(xPosition, yPosition, transform.position.z), ref velocity, smoothTime);
+        //}*/
+
+        /*if(PlayerController.player.gameObject.GetComponent<SpriteRenderer>().enabled == false)
+        {
+            transform.Translate(0.15f, 0, 0);
+        }
+        else
         {*/
             xPosition = target.position.x + offset.x;
             yPosition = offset.y;

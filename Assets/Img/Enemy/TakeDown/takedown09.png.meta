@@ -1,6 +1,6 @@
 fileFormatVersion: 2
-guid: 9d301469157566e408ac22aafbfbf908
-timeCreated: 1447689833
+guid: de8dc852f7190834996b6ca3bbec9792
+timeCreated: 1447690767
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName: {}
@@ -27,7 +27,7 @@ TextureImporter:
   cubemapConvolutionExponent: 1.5
   seamlessCubemap: 0
   textureFormat: -1
-  maxTextureSize: 2048
+  maxTextureSize: 1024
   textureSettings:
     filterMode: -1
     aniso: 16
@@ -46,11 +46,11 @@ TextureImporter:
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spritePixelsToUnits: 100
   alphaIsTransparency: 1
-  textureType: 8
+  textureType: 5
   buildTargetSettings: []
   spriteSheet:
     sprites: []
-  spritePackingTag: 
+  spritePackingTag: EnemyTakedown
   userData: 
   assetBundleName: 
   assetBundleVariant: 
