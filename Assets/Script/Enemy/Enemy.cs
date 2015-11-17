@@ -374,9 +374,13 @@ public class Enemy : MonoBehaviour
         if (!anim.GetBool("Takedown"))
         {
             hand.SetActive(false);
-            PlayerController.player.gameObject.GetComponent<SpriteRenderer>().enabled = false;
             anim.SetBool("Takedown", true);
         }
+    }
+
+    public void SomePlayer()
+    {
+        PlayerController.player.gameObject.GetComponent<SpriteRenderer>().enabled = false;
     }
 
     public void GameOver()
