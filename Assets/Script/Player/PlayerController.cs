@@ -159,6 +159,7 @@ public class PlayerController : MonoBehaviour
                 anim.SetTrigger("Attack");
                 attack = true;
                 StopCoroutine("HeavyAttack");
+                Background.fundo.Play();
                 audioController.StopCoroutine("PlayCarrega");
                 TudoFalso();
             }
