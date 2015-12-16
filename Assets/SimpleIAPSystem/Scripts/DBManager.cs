@@ -71,9 +71,6 @@ namespace SIS
         {
             instance = this;
             InitDB();
-
-            PlayerPrefs.SetString("blurb", "moreblurbs");
-            PlayerPrefs.Save();
         }
 
 
@@ -169,18 +166,6 @@ namespace SIS
                 //IAPObject of the IAP Settings editor
                 string id = IAPs[i];
                 IAPObject obj = IAPManager.GetIAPObject(id);
-				
-				//version 2.2 backwards compatibility fix (local ids in gameData)
-                if(string.IsNullOrEmpty(gameData[content][id]) &&
-                   obj.type != IAPType.consumableVirtual && obj.type != IAPType.nonConsumableVirtual)
-                {
-                    string localId = obj.GetIdentifier();
-                    if(id != localId && !string.IsNullOrEmpty(gameData[content][localId]))
-                    {
-                        gameData[content][id].AsBool = gameData[content][localId].AsBool;
-                        gameData[content].Remove(localId);
-                    }
-                }
 				
                 //check if the id doesn't exist already within contents
                 if (string.IsNullOrEmpty(gameData[content][id]))

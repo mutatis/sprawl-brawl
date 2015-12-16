@@ -14,14 +14,8 @@ namespace SIS
     /// <summary>
     public class IAPListener : MonoBehaviour
     {
-        /// <summary>
-        /// whether this script should print debug messages
-        /// </summary>
-        public bool debug;
-
-
         //subscribe to the most important IAP events
-        void OnEnable()
+        public void Init()
         {
             IAPManager.inventoryRequestFailedEvent += HandleFailedInventory;
             IAPManager.purchaseSucceededEvent += HandleSuccessfulPurchase;
@@ -31,24 +25,13 @@ namespace SIS
         }
 
 
-        //unsubscribe from IAP events on destruction
-        void OnDisable()
-        {
-            IAPManager.inventoryRequestFailedEvent -= HandleFailedInventory;
-            IAPManager.purchaseSucceededEvent -= HandleSuccessfulPurchase;
-            IAPManager.purchaseFailedEvent -= HandleFailedPurchase;
-            ShopManager.itemSelectedEvent -= HandleSelectedItem;
-            ShopManager.itemDeselectedEvent -= HandleDeselectedItem;
-        }
-
-
         /// <summary>
         /// handle purchases, for real money or ingame currency
         /// </summary>
         public void HandleSuccessfulPurchase(string id)
         {
             //differ between ids set in the IAP Settings editor
-            if (debug) Debug.Log("HandleSuccessfulPurchase: " + id);
+            if (IAPManager.isDebug) Debug.Log("HandleSuccessfulPurchase: " + id);
             //get instantiated shop item based on the IAP id
             IAPItem item = null;
             if (ShopManager.GetInstance())
@@ -180,14 +163,14 @@ namespace SIS
         //called when a purchased shop item gets selected
         void HandleSelectedItem(string id)
         {
-            if (debug) Debug.Log("Selected: " + id);
+            if (IAPManager.isDebug) Debug.Log("Selected: " + id);
         }
 
 
         //called when a selected shop item gets deselected
         void HandleDeselectedItem(string id)
         {
-            if (debug) Debug.Log("Deselected: " + id);
+            if (IAPManager.isDebug) Debug.Log("Deselected: " + id);
         }
     }
 }

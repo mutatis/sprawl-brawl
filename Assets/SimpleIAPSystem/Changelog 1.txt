@@ -1,6 +1,34 @@
 **************************************
-CHANGELOG (v2 and above)
+CHANGELOG
 **************************************
+v3.0
+THIS VERSION IS NOT BACKWARDS COMPATIBLE
+- Unity 5.3+: Unity IAP billing plugin is now supported!
+- unified IAP Settings editor for all products in one view
+- IAP Settings editor window can be resized
+- API: combined purchase methods into PurchaseProduct(string id)
+- added IAPListener script to the IAPManager main transform
+- debug messages are enabled for Development Builds only
+- renamed UIPanelStretch script for containers to IAPContainer
+- containers need to be IAPContainer scripts, not transforms
+- replaced confirmation checkmark on purchase with "OK" text
+- shop scenes scale with screen size (instead of pixel-perfect)
+- renamed prefabs to not include spaces (IAPManager, ShopManager)
+- fixed GetIAPUpgrade NR exception to throw a more detailed error
+- fixed OutOfIndexException when deleting the last virtual currency
+- Stans Assets: fixed duplicated IAPs exception in native settings
+- Stans Assets: fixed product prices not using the localized string
+- Voxel Busters: fixed NR exception when buying already owned items
+- updated SmartLocalization support to latest version
+Check our roadmap for features and requests! https://goo.gl/HONgk0
+
+Upgrade notes:
+- Please take a screenshot of your virtual items in the IAP Editor
+  before upgrading, as you will have to reenter them in the new view.
+  Clear the database on the first game launch (AllSelection scene).
+  Also carefully read the changelog for API and structural changes.
+  If you are using OpenIAB/Unibill, upgrade to Unity 5.3 and Unity IAP.
+
 v2.6
 - Cross Platform Native (VoxelBuster) plugins are now supported!
 - Stans Assets: updated compatibility to latest versions

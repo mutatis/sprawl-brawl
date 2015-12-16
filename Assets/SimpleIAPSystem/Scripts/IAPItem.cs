@@ -18,6 +18,7 @@ namespace SIS
         /// <summary>
         /// ID of the product
         /// </summary>
+        [HideInInspector]
         public string productId;
 
         /// <summary>
@@ -99,6 +100,7 @@ namespace SIS
         /// <summary>
         /// type of in app purchase for this item
         /// </summary>
+        [HideInInspector]
         public IAPType type = IAPType.consumable;
 
 
@@ -242,25 +244,7 @@ namespace SIS
         //maps to the corresponding purchase methods of IAPManager
         public void Purchase()
         {
-            //differ between IAP type
-            switch (type)
-            {
-                case IAPType.consumable:
-                    IAPManager.PurchaseConsumableProduct(this.productId);
-                    break;
-                case IAPType.nonConsumable:
-                    IAPManager.PurchaseNonconsumableProduct(this.productId);
-                    break;
-                case IAPType.subscription:
-                    IAPManager.PurchaseSubscription(this.productId);
-                    break;
-                case IAPType.consumableVirtual:
-                    IAPManager.PurchaseConsumableVirtualProduct(this.productId);
-                    break;
-                case IAPType.nonConsumableVirtual:
-                    IAPManager.PurchaseNonconsumableVirtualProduct(this.productId);
-                    break;
-            }
+			IAPManager.PurchaseProduct(this.productId);
 
             //hide buy button once a purchase was made
             //only when an additional buy trigger was set

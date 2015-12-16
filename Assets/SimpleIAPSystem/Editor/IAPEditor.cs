@@ -5,10 +5,8 @@
 
 using UnityEngine;
 using UnityEditor;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using System.Linq;
 
 namespace SIS
 {
@@ -35,17 +33,17 @@ namespace SIS
         //keep track of switching scenes for reinitialization
         private static string currentScene = "";
 
-        //first toolbar for displaying IAP types
-        int toolbar = 0;
-        string[] toolbarStrings = new string[] { "In App Purchases", "In Game Content" };
         //available currency names for selection
-        string[] currencyNames;
+		string[] currencyNames = new string[0];
         //currently selected currency index
         int currencyIndex = -1;
+        //inspector scrollbar for window
+        Vector2 scrollPos;
+        //inspector scrollbar for currencies
+        Vector2 scrollPosCurrency;
 
-        //inspector scrollbar x/y position for each tab
-        Vector2 scrollPosIAP;
-        Vector2 scrollPosIGC;
+        string[] headerNames = new string[] { "Identifier", "Icon", "Type", "Title", "Description", "Price", "Fetch" };
+        string[] productTypes = new string[] { "Create Product:", "In App Purchase", "Virtual Economy" };
 
         //possible criteria for ordering product ids
         //changing the selected order type will cause a re-order
@@ -65,7 +63,7 @@ namespace SIS
         static void Init()
         {
             //get existing open window or if none, make a new one
-            iapEditor = (IAPEditor)EditorWindow.GetWindowWithRect(typeof(IAPEditor), new Rect(0, 0, 800, 400), false, "IAP Settings");
+            iapEditor = (IAPEditor)EditorWindow.GetWindow(typeof(IAPEditor), false, "IAP Settings");
             //automatically repaint whenever the scene has changed (for caution)
             iapEditor.autoRepaintOnSceneChange = true;
         }
@@ -86,7 +84,7 @@ namespace SIS
                 return;
 
             if (shop)
-                RemoveContainerConnections();
+                RemoveShopContainers();
 
             //set current currency index from -1 to first one,
             //if currencies were specified
@@ -98,7 +96,7 @@ namespace SIS
         //refresh on new scenes
         void OnHierarchyChange()
         {
-            if (string.IsNullOrEmpty(currentScene) || currentScene != EditorApplication.currentScene)
+			if (string.IsNullOrEmpty(currentScene) || currentScene != EditorApplication.currentScene)
             {
                 OnEnable();
                 Repaint();
@@ -109,7 +107,7 @@ namespace SIS
         //locate IAP Manager prefab in the project
         public static IAPManager FindIAPManager()
         {
-            GameObject obj = Resources.Load("IAP Manager") as GameObject;
+            GameObject obj = Resources.Load("IAPManager") as GameObject;
 
             if (obj != null && PrefabUtility.GetPrefabType(obj) == PrefabType.Prefab)
             {
@@ -127,15 +125,12 @@ namespace SIS
 
 
         //remove empty IAPGroup references in the scene
-        void RemoveContainerConnections()
+        void RemoveShopContainers()
         {
             //get all container objects from the Shop Manager,
             //then populate a list with all IAPGroups
-            List<Container> containers = new List<Container>();
-            containers.AddRange(shop.containers);
-            List<IAPGroup> allGroups = new List<IAPGroup>();
-            allGroups.AddRange(script.IAPs);
-            allGroups.AddRange(script.IGCs);
+            List<ShopContainer> containers = new List<ShopContainer>(shop.containers);
+            List<IAPGroup> allGroups = new List<IAPGroup>(script.IAPs);
 
             //loop over lists and compare them
             for (int i = 0; i < containers.Count; i++)
@@ -164,7 +159,7 @@ namespace SIS
         {
             if (script == null)
             {
-                EditorGUILayout.LabelField("Couldn't find an IAP Manager prefab in the project! " +
+                EditorGUILayout.LabelField("Couldn't find an IAPManager prefab in the project! " +
                                  "Is it located in the Resources folder?");
                 return;
             }
@@ -175,23 +170,7 @@ namespace SIS
             Object[] undo = objs.ToArray();
             Undo.RecordObjects(undo, "ChangedSettings");
                 
-            //display toolbar at the top, followed by a horizontal line
-            toolbar = GUILayout.Toolbar(toolbar, toolbarStrings);
-            GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));
-
-            //handle toolbar selection
-            switch (toolbar)
-            {
-                //first tab selected
-                case 0:
-                    DrawIAP(script.IAPs);
-                    break;
-                //second tab selected
-                case 1:
-                    DrawIGC(script.IGCs);
-                    break;
-            }
-
+            DrawIAP(script.IAPs);
             //track change as well as undo
             TrackChange();
         }
@@ -201,11 +180,113 @@ namespace SIS
         //for a specific OS
         void DrawIAP(List<IAPGroup> list)
         {
+            //begin a scrolling view inside this tab, pass in current Vector2 scroll position 
+            scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
+            GUILayout.Space(10);
             EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Virtual Currencies:", EditorStyles.boldLabel, GUILayout.Width(125), GUILayout.Height(20));
+
+            //button for adding a new currency
             GUI.backgroundColor = Color.yellow;
+            if (GUILayout.Button("Add Currency"))
+            {
+                //switch current currency selection to the first entry
+                currencyIndex = 0;
+                //create new currency, then loop over items
+                //and add a new currency slot for each of them 
+                script.currency.Add(new IAPCurrency());
+                for (int i = 0; i < list.Count; i++)
+                    for (int j = 0; j < list[i].items.Count; j++)
+                        list[i].items[j].virtualPrice.Add(new IAPCurrency());
+                return;
+            }
+            GUI.backgroundColor = Color.white;
+            EditorGUILayout.EndHorizontal();
+
+            //begin a scrolling view inside this tab, pass in current Vector2 scroll position 
+            scrollPosCurrency = EditorGUILayout.BeginScrollView(scrollPosCurrency, GUILayout.Height(105));
+
+            EditorGUILayout.BeginHorizontal();
+            //only draw a box behind currencies if there are any
+            if (script.currency.Count > 0)
+                GUI.Box(new Rect(0, 0, iapEditor.maxSize.x, 90), "");
+
+            //loop through currencies
+            for (int i = 0; i < script.currency.Count; i++)
+            {
+                EditorGUILayout.BeginVertical();
+                //draw currency properties,
+                //such as name and amount
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Name", GUILayout.Width(44));
+                script.currency[i].name = EditorGUILayout.TextField(script.currency[i].name, GUILayout.Width(54));
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Default", GUILayout.Width(44));
+                script.currency[i].amount = EditorGUILayout.IntField(script.currency[i].amount, GUILayout.Width(54));
+                EditorGUILayout.EndHorizontal();
+
+                //button for deleting a currency
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Space(52);
+                GUI.backgroundColor = Color.gray;
+                if (GUILayout.Button("X", GUILayout.Width(54)))
+                {
+                    //ask again before deleting the currency,
+                    //as deleting it could cause angry customers!
+                    //it's probably better not to remove currencies in production versions
+                    if (EditorUtility.DisplayDialog("Delete Currency?",
+                        "Existing users might lose their funds associated with this currency when updating.",
+                        "Continue", "Abort"))
+                    {
+                        //loop over items and remove the
+                        //associated currency slot for each of them
+						for (int j = 0; j < list.Count; j++)
+							for (int k = 0; k < list[j].items.Count; k++) 
+							{
+								if(list[j].items[k].virtualPrice != null
+								   && list[j].items[k].virtualPrice.Count > i)
+									list[j].items[k].virtualPrice.RemoveAt (i);
+							}
+                        //then remove the currency
+                        script.currency.RemoveAt(i);
+                        //reposition current currency index
+                        if (script.currency.Count > 0)
+                            currencyIndex = 0;
+                        else
+                            currencyIndex = -1;
+                        break;
+                    }
+                }
+                GUI.backgroundColor = Color.white;
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.EndVertical();
+            }
+
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
+
+            //draw currency selector, if there are any
+            if (script.currency.Count > 0)
+            {
+                GUILayout.Space(10);
+                EditorGUILayout.BeginHorizontal();
+                //get all currency names,
+                //then draw a popup list for selecting the desired index
+                currencyNames = GetCurrencyNames();
+                EditorGUILayout.LabelField("Selected Currency:", GUILayout.Width(120));
+                currencyIndex = EditorGUILayout.Popup(currencyIndex, currencyNames, GUILayout.Width(140));
+                EditorGUILayout.EndHorizontal();
+            }
+
+            //ends the scrollview defined above
+            EditorGUILayout.EndScrollView();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("In App Purchases:", EditorStyles.boldLabel, GUILayout.Width(125), GUILayout.Height(20));
 
             //draw yellow button for adding a new IAP group
-            if (GUILayout.Button("Add new Group"))
+            GUI.backgroundColor = Color.yellow;
+            if (GUILayout.Button("Add new Category"))
             {
                 //create new group, give it a generic name based on
                 //the current unix time and add it to the list of groups
@@ -216,46 +297,49 @@ namespace SIS
                 list.Add(newGroup);
                 return;
             }
-
-            GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();
-
-            //begin a scrolling view inside this tab, pass in current Vector2 scroll position 
-            scrollPosIAP = EditorGUILayout.BeginScrollView(scrollPosIAP, GUILayout.Height(350));
-            GUILayout.Space(20);
+            EditorGUILayout.Space();
 
             //loop over IAP groups for this OS
             for (int i = 0; i < list.Count; i++)
             {
                 //cache group
                 IAPGroup group = list[i];
-                //version 1.2 backwards compatibility fix (empty IAPGroup ids)
-                if (string.IsNullOrEmpty(group.id))
-                    group.id = GenerateUnixTime();
-
                 //populate shop container variables if ShopManager is present
-                Container shopGroup = null;
+                ShopContainer shopContainer = null;
                 if (shop)
                 {
-                    shopGroup = shop.GetContainer(group.id);
-                    if (shopGroup == null)
+                    shopContainer = shop.GetContainer(group.id);
+                    if (shopContainer == null)
                     {
-                        shopGroup = new Container();
-                        shopGroup.id = group.id;
-                        shop.containers.Add(shopGroup);
+                        shopContainer = new ShopContainer();
+                        shopContainer.id = group.id;
+                        shop.containers.Add(shopContainer);
                     }
                 }
 
-                EditorGUILayout.BeginHorizontal();
                 GUI.backgroundColor = Color.yellow;
+                EditorGUILayout.BeginHorizontal();
+                int productSelection = 0;
+                productSelection = EditorGUILayout.Popup(productSelection, productTypes);
+
                 //button for adding a new IAPObject (product) to this group
-                if (GUILayout.Button("New Product", GUILayout.Width(120)))
+                if (productSelection > 0)
                 {
                     IAPObject newObj = new IAPObject();
-                    //add platform dependent ids to the local list
-                    int platforms = System.Enum.GetValues(typeof(IAPPlatform)).Length;
-                    for (int j = 0; j < platforms; j++)
-                        newObj.localId.Add(new IAPIdentifier());
+
+                    switch (productSelection)
+                    {
+                        case 1:
+                            Debug.LogError("Can't create products for real money. You need to import a billing plugin first!" +
+                                           " Open 'Window > Simple IAP System > Plugin Setup' if you want to use one.");
+                            return;
+                        case 2:
+                            newObj.isVirtual = true;
+                            for(int j = 0; j < script.currency.Count; j++)
+                                newObj.virtualPrice.Add(new IAPCurrency());
+                            break;
+                    }
 
                     group.items.Add(newObj);
                     break;
@@ -271,14 +355,18 @@ namespace SIS
                 GUILayout.Space(10);
 
                 if (!shop)
+                {
+                    GUI.contentColor = Color.yellow;
                     EditorGUILayout.LabelField("No ShopManager prefab found in this scene!", GUILayout.Width(300));
+                    GUI.contentColor = Color.white;
+                }
                 else
                 {
                     EditorGUILayout.LabelField("Prefab:", GUILayout.Width(45));
-                    shopGroup.prefab = (GameObject)EditorGUILayout.ObjectField(shopGroup.prefab, typeof(GameObject), false, GUILayout.Width(100));
+                    shopContainer.prefab = (GameObject)EditorGUILayout.ObjectField(shopContainer.prefab, typeof(GameObject), false, GUILayout.Width(100));
                     GUILayout.Space(10);
-                    EditorGUILayout.LabelField("Parent:", GUILayout.Width(45));
-                    shopGroup.parent = (Transform)EditorGUILayout.ObjectField(shopGroup.parent, typeof(Transform), true, GUILayout.Width(100));
+                    EditorGUILayout.LabelField("Container:", GUILayout.Width(65));
+                    shopContainer.parent = (IAPContainer)EditorGUILayout.ObjectField(shopContainer.parent, typeof(IAPContainer), true, GUILayout.Width(100));
                 }
                 
                 GUILayout.FlexibleSpace();
@@ -321,34 +409,17 @@ namespace SIS
                 GUI.backgroundColor = Color.gray;
                 if (GUILayout.Button("X", GUILayout.Width(20)))
                 {
-                    if(shop) shop.containers.Remove(shopGroup);
+                    if(shop) shop.containers.Remove(shopContainer);
                     list.RemoveAt(i);
                     break;
                 }
                 GUI.backgroundColor = Color.white;
                 EditorGUILayout.EndHorizontal();
                 GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));
+				GUILayout.Space(20);
 
-                //draw header information for each item property
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.Space(100);
-                EditorGUILayout.LabelField("ID:", GUILayout.Width(45));
-                GUILayout.Space(20);
-                EditorGUILayout.LabelField("Icon:", GUILayout.Width(75));
-                GUILayout.Space(20);
-                EditorGUILayout.LabelField("Type:", GUILayout.Width(42));
-                GUILayout.Space(20);
-                EditorGUILayout.LabelField("Fetch:", GUILayout.Width(55));
-                GUILayout.Space(20);
-                int spaceTitleToDescription = 80;
-                if (group.items.Count == 1) spaceTitleToDescription = 125;
-                EditorGUILayout.LabelField("Title:", GUILayout.Width(spaceTitleToDescription));
-                GUILayout.Space(20);
-                EditorGUILayout.LabelField("Description:", GUILayout.Width(100));
-                GUILayout.Space(20);
-                EditorGUILayout.LabelField("Price:", GUILayout.Width(100));
-                EditorGUILayout.EndHorizontal();
-
+				List<Rect> headerRect = GetHeaders();
+                
                 //loop over items in this group
                 for (int j = 0; j < group.items.Count; j++)
                 {
@@ -356,24 +427,54 @@ namespace SIS
                     IAPObject obj = group.items[j];
                     EditorGUILayout.BeginHorizontal();
 
-                    //version < 2.1 compatibility (add per-platform ids)
+                    //new platforms future compatibility
                     int platforms = System.Enum.GetValues(typeof(IAPPlatform)).Length;
-                    for (int k = obj.localId.Count; k < platforms; k++)
-                        obj.localId.Add(new IAPIdentifier());
+                    for (int k = obj.localIDs.Count; k < platforms; k++)
+                        obj.localIDs.Add(new IAPIdentifier());
 
-                    obj.platformFoldout = EditorGUILayout.Foldout(obj.platformFoldout, "");
+                    GUILayout.Box("", GUILayout.Height(15), GUILayout.Width(15));
+                    Rect foldoutRect = GUILayoutUtility.GetLastRect();
+					if(!obj.isVirtual)
+                    	obj.platformFoldout = EditorGUI.Foldout(foldoutRect, obj.platformFoldout, "");
 
                     //draw IAPObject (item/product) properties
-                    obj.id = EditorGUILayout.TextField(obj.id, GUILayout.Width(100));
-                    obj.icon = EditorGUILayout.ObjectField(obj.icon, typeof(Sprite), false, GUILayout.Width(65)) as Sprite;
-                    obj.type = (IAPType)EditorGUILayout.EnumPopup(obj.type, GUILayout.Width(110));
-                    //don't allow virtual IAP types, they must be consumable/non consumable/subscription
-                    if (obj.type == IAPType.consumableVirtual) obj.type = IAPType.consumable;
-                    else if (obj.type == IAPType.nonConsumableVirtual) obj.type = IAPType.nonConsumable;
-                    obj.fetch = EditorGUILayout.Toggle(obj.fetch, GUILayout.Width(20));
-                    obj.title = EditorGUILayout.TextField(obj.title);
+                    obj.id = EditorGUILayout.TextField(obj.id, GUILayout.MaxWidth(150));
+                    obj.icon = EditorGUILayout.ObjectField(obj.icon, typeof(Sprite), false, GUILayout.MaxWidth(65)) as Sprite;
+
+                    IAPType oldType = obj.type;
+                    obj.type = (IAPType)EditorGUILayout.EnumPopup(obj.type, GUILayout.MaxWidth(110));
+                    if (obj.type != oldType && !obj.type.ToString().Contains("Virtual"))
+                    {
+                        Debug.LogError("Can't create products for real money. You need to import a billing plugin first!" +
+                                        "Open 'Window > Simple IAP System > Plugin Setup' if you want to use one.");
+                        obj.type = IAPType.consumableVirtual;
+                    }
+
+                    obj.title = EditorGUILayout.TextField(obj.title, GUILayout.MaxWidth(180));
                     obj.description = EditorGUILayout.TextField(obj.description);
-                    obj.realPrice = EditorGUILayout.TextField(obj.realPrice, GUILayout.Width(80));
+
+					if (obj.isVirtual) 
+					{
+						IAPCurrency cur = null;
+						if(currencyIndex >= 0 && obj.virtualPrice.Count > currencyIndex)
+							cur = obj.virtualPrice[currencyIndex];
+
+						if (cur == null) 
+						{
+							EditorGUILayout.LabelField("No currency!", GUILayout.MinWidth(70), GUILayout.MaxWidth(100));
+						}
+						else 
+						{
+							cur.name = currencyNames[currencyIndex];
+							EditorGUILayout.LabelField(cur.name, GUILayout.MinWidth(30), GUILayout.MaxWidth(40));
+							cur.amount = EditorGUILayout.IntField (cur.amount, GUILayout.MinWidth(35), GUILayout.Width(50));
+						}
+					} 
+					else 
+					{
+						obj.realPrice = EditorGUILayout.TextField (obj.realPrice, GUILayout.MaxWidth(80));
+						obj.fetch = EditorGUILayout.Toggle (obj.fetch, GUILayout.MaxWidth(20));
+					}
 
                     //button for adding a requirement to this item
                     if (!string.IsNullOrEmpty(obj.req.entry) || !string.IsNullOrEmpty(obj.req.nextId))
@@ -409,9 +510,12 @@ namespace SIS
                         EditorGUIUtility.keyboardControl = 0;
                     }
 
+                    if(group.items.Count == 1)
+                        GUILayout.Space(52);
+
                     //button for removing an item of the group
                     GUI.backgroundColor = Color.gray;
-                    if (GUILayout.Button("X"))
+                    if (GUILayout.Button("X", GUILayout.Width(20)))
                     {
                         group.items.RemoveAt(j);
                         break;
@@ -423,13 +527,13 @@ namespace SIS
                     if (obj.platformFoldout)
                     {
                         EditorGUILayout.LabelField("Platform Overrides");
-                        for (int k = 0; k < obj.localId.Count; k++)
+                        for (int k = 0; k < obj.localIDs.Count; k++)
                         {
                             EditorGUILayout.BeginHorizontal();
                             GUILayout.Space(40);
-                            obj.localId[k].overridden = EditorGUILayout.BeginToggleGroup("", obj.localId[k].overridden);
+                            obj.localIDs[k].overridden = EditorGUILayout.BeginToggleGroup("", obj.localIDs[k].overridden);
                             EditorGUILayout.BeginHorizontal();
-                            obj.localId[k].id = EditorGUILayout.TextField(obj.localId[k].id, GUILayout.Width(120));
+                            obj.localIDs[k].id = EditorGUILayout.TextField(obj.localIDs[k].id, GUILayout.Width(120));
                             EditorGUILayout.LabelField(((IAPPlatform)k).ToString());
                             EditorGUILayout.EndHorizontal();
                             EditorGUILayout.EndToggleGroup();
@@ -437,6 +541,10 @@ namespace SIS
                         }
                     }
                 }
+
+                for (int j = 0; j < headerRect.Count; j++)
+                    EditorGUI.LabelField(new Rect(headerRect[j].x, headerRect[j].y - 20, 100, 20), headerNames[j]);
+
                 GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));
                 GUILayout.Space(30);
             }
@@ -446,338 +554,44 @@ namespace SIS
         }
 
 
-        //draws the in game content editor
-        void DrawIGC(List<IAPGroup> list)
-        {
-            EditorGUILayout.BeginHorizontal();
-            GUI.backgroundColor = Color.yellow;
+		List<Rect> GetHeaders()
+		{
+			List<Rect> temp = new List<Rect>();
+			EditorGUILayout.BeginHorizontal();
 
-            //draw currencies up to a maximum of 7
-            //(there is no limitation, but 7 currencies do fit in the window nicely,
-            //and there really shouldnt be a reason to have 7+ different currencies)
-            if (script.currency.Count < 7)
-            {
-                //button for adding a new currency
-                if (GUILayout.Button("Add Currency"))
-                {
-                    //switch current currency selection to the first entry
-                    currencyIndex = 0;
-                    //create new currency, then loop over items
-                    //and add a new currency slot for each of them 
-                    script.currency.Add(new IAPCurrency());
-                    for (int i = 0; i < list.Count; i++)
-                        for (int j = 0; j < list[i].items.Count; j++)
-                            list[i].items[j].virtualPrice.Add(new IAPCurrency());
-                    return;
-                }
-            }
-            else
-            {
-                //for more than 7 currencies,
-                //we show a transparent button with no functionality
-                GUI.backgroundColor = new Color(1, 0.9f, 0, 0.4f);
-                if (GUILayout.Button("Add Currency"))
-                { }
-            }
+			EditorGUILayout.TextField("", GUILayout.MaxHeight(1), GUILayout.Width(15));
 
-            //draw yellow button for adding a new IAP group
-            if (GUILayout.Button("Add new Group"))
-            {
-                //create new group, give it a generic name based on
-                //the current system time and add it to the list of groups
-                IAPGroup newGroup = new IAPGroup();
-                string timestamp = GenerateUnixTime();
-                newGroup.name = "Grp " + timestamp;
-                newGroup.id = timestamp;
-                list.Add(newGroup);
-                return;
-            }
+			EditorGUILayout.TextField("", GUILayout.MaxHeight(1), GUILayout.MaxWidth(150));
+			temp.Add(GUILayoutUtility.GetLastRect());
 
-            GUI.backgroundColor = Color.white;
-            EditorGUILayout.EndHorizontal();
+			EditorGUILayout.TextField("", GUILayout.MaxHeight(1), GUILayout.MaxWidth(65));
+			temp.Add(GUILayoutUtility.GetLastRect());
 
-            //begin a scrolling view inside tab, pass in current Vector2 scroll position 
-            scrollPosIGC = EditorGUILayout.BeginScrollView(scrollPosIGC, GUILayout.Height(350));
-            GUILayout.Space(20);
-            EditorGUILayout.BeginHorizontal();
-            //only draw a box behind currencies if there are any
-            if (script.currency.Count > 0)
-                GUI.Box(new Rect(3, 15, 796, 95), "");
+			EditorGUILayout.TextField("", GUILayout.MaxHeight(1), GUILayout.MaxWidth(110));
+			temp.Add(GUILayoutUtility.GetLastRect());
 
-            //loop through currencies
-            for (int i = 0; i < script.currency.Count; i++)
-            {
-                EditorGUILayout.BeginVertical();
-                //draw currency properties,
-                //such as name and amount
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Name", GUILayout.Width(44));
-                script.currency[i].name = EditorGUILayout.TextField(script.currency[i].name, GUILayout.Width(54));
-                EditorGUILayout.EndHorizontal();
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Default", GUILayout.Width(44));
-                script.currency[i].amount = EditorGUILayout.IntField(script.currency[i].amount, GUILayout.Width(54));
-                EditorGUILayout.EndHorizontal();
+			EditorGUILayout.TextField("", GUILayout.MaxHeight(1), GUILayout.MaxWidth(180));
+			temp.Add(GUILayoutUtility.GetLastRect());
 
-                //button for deleting a currency
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.Space(52);
-                GUI.backgroundColor = Color.gray;
-                if (GUILayout.Button("X", GUILayout.Width(54)))
-                {
-                    //ask again before deleting the currency,
-                    //as deleting it could cause angry customers!
-                    //it's probably better not to remove currencies in production versions
-                    if (EditorUtility.DisplayDialog("Delete Currency?",
-                        "Existing users might lose their funds associated with this currency when updating.",
-                        "Continue", "Abort"))
-                    {
-                        //loop over items and remove the
-                        //associated currency slot for each of them
-                        for (int j = 0; j < list.Count; j++)
-                            for (int k = 0; k < list[j].items.Count; k++)
-                                list[j].items[k].virtualPrice.RemoveAt(i);
-                        //then remove the currency
-                        script.currency.RemoveAt(i);
-                        //reposition current currency index
-                        if (script.currency.Count > 0)
-                            currencyIndex = 0;
-                        else
-                            currencyIndex = -1;
-                        break;
-                    }
-                }
-                GUI.backgroundColor = Color.white;
-                EditorGUILayout.EndHorizontal();
-                EditorGUILayout.EndVertical();
-            }
-            GUILayout.FlexibleSpace();
-            EditorGUILayout.EndHorizontal();
+			EditorGUILayout.TextField("", GUILayout.MaxHeight(1));
+			temp.Add(GUILayoutUtility.GetLastRect());
 
-            //draw currency selector, if there are any
-            if (script.currency.Count > 0)
-            {
-                GUILayout.Space(10);
-                EditorGUILayout.BeginHorizontal();
-                //get all currency names,
-                //then draw a popup list for selecting the desired index
-                currencyNames = GetCurrencyNames();
-                EditorGUILayout.LabelField("Selected Currency:", GUILayout.Width(120));
-                currencyIndex = EditorGUILayout.Popup(currencyIndex, currencyNames, GUILayout.Width(140));
-                EditorGUILayout.EndHorizontal();
-                GUILayout.Space(20);
-            }
+			EditorGUILayout.TextField("", GUILayout.MaxHeight(1), GUILayout.MaxWidth(80));
+			temp.Add(GUILayoutUtility.GetLastRect());
 
-            //loop over IAP groups
-            for (int i = 0; i < list.Count; i++)
-            {
-                //cache group
-                IAPGroup group = list[i];
-                //version 1.2 backwards compatibility fix (empty IAPGroup ids)
-                if (string.IsNullOrEmpty(group.id))
-                    group.id = GenerateUnixTime();
+			EditorGUILayout.TextField("", GUILayout.MaxHeight(1), GUILayout.MaxWidth(20));
+			temp.Add(GUILayoutUtility.GetLastRect());
 
-                Container shopGroup = null;
-                if (shop)
-                {
-                    shopGroup = shop.GetContainer(group.id);
-                    if (shopGroup == null)
-                    {
-                        shopGroup = new Container();
-                        shopGroup.id = group.id;
-                        shop.containers.Add(shopGroup);
-                    }
-                }
+			EditorGUILayout.LabelField("", GUILayout.MaxHeight(1), GUILayout.Width(20));
 
-                EditorGUILayout.BeginHorizontal();
-                GUI.backgroundColor = Color.yellow;
-                //button for adding a new IAPObject (product) to this group
-                if (GUILayout.Button("New Product", GUILayout.Width(120)))
-                {
-                    IAPObject newObj = new IAPObject();
-                    for (int j = 0; j < script.currency.Count; j++)
-                        newObj.virtualPrice.Add(new IAPCurrency());
-                    group.items.Add(newObj);
-                    break;
-                }
-                GUI.backgroundColor = Color.white;
+			EditorGUILayout.LabelField("", GUILayout.MaxHeight(1), GUILayout.Width(48));
 
-                //draw group properties
-                EditorGUILayout.LabelField("Group:", GUILayout.Width(45));
-                group.name = EditorGUILayout.TextField(group.name, GUILayout.Width(90));
-                GUILayout.Space(10);
-                EditorGUILayout.LabelField("Sort:", GUILayout.Width(35));
-                orderType = (OrderType)EditorGUILayout.EnumPopup(orderType, GUILayout.Width(60));
-                GUILayout.Space(10);
+			EditorGUILayout.LabelField("", GUILayout.MaxHeight(1), GUILayout.Width(20));
 
-                if (!shop)
-                    EditorGUILayout.LabelField("No ShopManager prefab found in this scene!", GUILayout.Width(300));
-                else
-                {
-                    EditorGUILayout.LabelField("Prefab:", GUILayout.Width(45));
-                    shopGroup.prefab = (GameObject)EditorGUILayout.ObjectField(shopGroup.prefab, typeof(GameObject), false, GUILayout.Width(100));
-                    GUILayout.Space(10);
-                    EditorGUILayout.LabelField("Parent:", GUILayout.Width(45));
-                    shopGroup.parent = (Transform)EditorGUILayout.ObjectField(shopGroup.parent, typeof(Transform), true, GUILayout.Width(100));
-                }
+			EditorGUILayout.EndHorizontal();
 
-                GUILayout.FlexibleSpace();
-                if (orderType != OrderType.none)
-                {
-                    group.items = orderProducts(group.items);
-                    break;
-                }
-
-                //same as in DrawIAP(),
-                //move group up & down buttons
-                int groupUpWidth = 22;
-                int groupDownWidth = 22;
-                if (i == 0) groupDownWidth = 48;
-                if (i == list.Count - 1) groupUpWidth = 48;
-
-                if (i > 0 && GUILayout.Button("▲", GUILayout.Width(groupUpWidth)))
-                {
-                    list[i] = list[i - 1];
-                    list[i - 1] = group;
-                    EditorGUIUtility.hotControl = 0;
-                    EditorGUIUtility.keyboardControl = 0;
-                }
-                if (i < list.Count - 1 && GUILayout.Button("▼", GUILayout.Width(groupDownWidth)))
-                {
-                    list[i] = list[i + 1];
-                    list[i + 1] = group;
-                    EditorGUIUtility.hotControl = 0;
-                    EditorGUIUtility.keyboardControl = 0;
-                }
-
-                //button for removing a group including items
-                GUI.backgroundColor = Color.gray;
-                if (GUILayout.Button("X", GUILayout.Width(20)))
-                {
-                    if(shop) shop.containers.Remove(shopGroup);
-                    list.RemoveAt(i);
-                    break;
-                }
-                GUI.backgroundColor = Color.white;
-                EditorGUILayout.EndHorizontal();
-                GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));
-
-                //draw header information for each item property
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("ID:", GUILayout.Width(110));
-                GUILayout.Space(20);
-                EditorGUILayout.LabelField("Icon:", GUILayout.Width(75));
-                GUILayout.Space(20);
-                EditorGUILayout.LabelField("Type:", GUILayout.Width(100));
-                GUILayout.Space(20);
-                int spaceTitleToDescription = 90;
-                if (group.items.Count == 1) spaceTitleToDescription = 110;
-                EditorGUILayout.LabelField("Title:", GUILayout.Width(spaceTitleToDescription));
-                GUILayout.Space(20);
-                int spaceDescriptionToPrice = 135;
-                if (group.items.Count == 1) spaceDescriptionToPrice = 145;
-                EditorGUILayout.LabelField("Description:", GUILayout.Width(spaceDescriptionToPrice));
-                GUILayout.Space(20);
-                EditorGUILayout.LabelField("Price:", GUILayout.Width(40));
-                GUILayout.Space(80);
-                EditorGUILayout.EndHorizontal();
-
-                //loop over items in this group
-                for (int j = 0; j < group.items.Count; j++)
-                {
-                    //cache item reference
-                    IAPObject obj = group.items[j];
-                    EditorGUILayout.BeginHorizontal();
-
-                    //draw IAPObject (item/product) properties
-                    obj.id = EditorGUILayout.TextField(obj.id, GUILayout.Width(120));
-                    obj.icon = EditorGUILayout.ObjectField(obj.icon, typeof(Sprite), false, GUILayout.Width(65)) as Sprite;
-                    obj.type = (IAPType)EditorGUILayout.EnumPopup(obj.type, GUILayout.Width(110));
-                    //don't allow consumable/non consumable/subscription IAP types, they must be virtual
-                    if (obj.type == IAPType.consumable) obj.type = IAPType.consumableVirtual;
-                    else if (obj.type == IAPType.nonConsumable || obj.type == IAPType.subscription)
-                        obj.type = IAPType.nonConsumableVirtual;
-                    //other item properties
-                    obj.title = EditorGUILayout.TextField(obj.title);
-                    obj.description = EditorGUILayout.TextField(obj.description);
-
-                    //if a currency has been selected previously,
-                    //draw an input field for the selected currency
-                    if (currencyIndex > -1)
-                    {
-                        //version 1.1 compability fix (virtual currency int -> IAPCurrency conversion)
-                        if (obj.virtualPrice == null || currencyIndex > obj.virtualPrice.Count - 1)
-                        {
-                            GUI.backgroundColor = Color.gray;
-                            if (GUILayout.Button("X"))
-                            {
-                                group.items.RemoveAt(j);
-                                break;
-                            }
-                            GUI.backgroundColor = Color.white;
-                            EditorGUILayout.EndHorizontal();
-                            continue;
-                        }
-
-                        EditorGUILayout.BeginHorizontal();
-                        IAPCurrency cur = obj.virtualPrice[currencyIndex];
-                        cur.name = currencyNames[currencyIndex];
-                        EditorGUILayout.LabelField(cur.name, GUILayout.Width(40));
-                        cur.amount = EditorGUILayout.IntField(cur.amount, GUILayout.Width(60));
-                        EditorGUILayout.EndHorizontal();
-                    }
-                    else
-                        GUILayout.FlexibleSpace();
-
-                    //same as in DrawIAP(), requirement button
-                    if (!string.IsNullOrEmpty(obj.req.entry) || !string.IsNullOrEmpty(obj.req.nextId))
-                        GUI.backgroundColor = Color.yellow;
-                    if (GUILayout.Button("R", GUILayout.Width(20)))
-                    {
-                        reqEditor = (RequirementEditor)EditorWindow.GetWindowWithRect(typeof(RequirementEditor), new Rect(0, 0, 300, 170), false, "Requirement");
-                        reqEditor.obj = obj;
-                    }
-
-                    GUI.backgroundColor = Color.white;
-                    //same as in DrawIAP(),
-                    //move item up & down buttons
-                    int buttonUpWidth = 22;
-                    int buttonDownWidth = 22;
-                    if (j == 0) buttonDownWidth = 48;
-                    if (j == group.items.Count - 1) buttonUpWidth = 48;
-
-                    if (j > 0 && GUILayout.Button("▲", GUILayout.Width(buttonUpWidth)))
-                    {
-                        group.items[j] = group.items[j - 1];
-                        group.items[j - 1] = obj;
-                        EditorGUIUtility.hotControl = 0;
-                        EditorGUIUtility.keyboardControl = 0;
-                    }
-                    if (j < group.items.Count - 1 && GUILayout.Button("▼", GUILayout.Width(buttonDownWidth)))
-                    {
-                        group.items[j] = group.items[j + 1];
-                        group.items[j + 1] = obj;
-                        EditorGUIUtility.hotControl = 0;
-                        EditorGUIUtility.keyboardControl = 0;
-                    }
-
-                    //button for removing an item of the group
-                    GUI.backgroundColor = Color.gray;
-                    if (GUILayout.Button("X"))
-                    {
-                        group.items.RemoveAt(j);
-                        break;
-                    }
-                    GUI.backgroundColor = Color.white;
-                    EditorGUILayout.EndHorizontal();
-                }
-                GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));
-                GUILayout.Space(30);
-            }
-
-            //ends the scrollview defined above
-            EditorGUILayout.EndScrollView();
-        }
+			return temp;
+		}
 
 
         //orders a list of IAPObjects (products)
@@ -804,7 +618,7 @@ namespace SIS
                 case OrderType.priceDesc:
 
                     //log warning if price sorting has been selected on virtual items but no currency specified  
-                    if (list[0].type == IAPType.consumableVirtual || list[0].type == IAPType.nonConsumableVirtual)
+                    if (list[0].isVirtual)
                     {
                         if (script.currency.Count <= 0)
                         {
@@ -844,7 +658,7 @@ namespace SIS
                 //for real money items first convert input string to decimal -
                 //and compare with next entry, then take first
                 case OrderType.priceAsc:
-                    if (list[0].type == IAPType.consumableVirtual || list[0].type == IAPType.nonConsumableVirtual)
+                    if (list[0].isVirtual)
                         sortedList.Sort((a, b) => a.virtualPrice[currencyIndex].amount.CompareTo(b.virtualPrice[currencyIndex].amount));
                     else
                         sortedList.Sort((a, b) => decimal.Parse(Regex.Replace(a.realPrice, pattern, ""))
@@ -855,7 +669,7 @@ namespace SIS
                 //for real money items first convert input string to decimal -
                 //and compare with next entry, then take second
                 case OrderType.priceDesc:
-                    if (list[0].type == IAPType.consumableVirtual || list[0].type == IAPType.nonConsumableVirtual)
+                    if (list[0].isVirtual)
                         sortedList.Sort((a, b) => -a.virtualPrice[currencyIndex].amount.CompareTo(b.virtualPrice[currencyIndex].amount));
                     else
                         sortedList.Sort((a, b) => -decimal.Parse(Regex.Replace(a.realPrice, pattern, ""))

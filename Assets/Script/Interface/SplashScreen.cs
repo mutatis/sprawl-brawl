@@ -1,16 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class SplashScreen : MonoBehaviour 
 {
-
-	void Start()
-	{
-		Muda ();
-	}
-
 	public void Muda()
 	{
-		Application.LoadLevel("Menu");
+        SceneManager.LoadScene("Menu");
 	}
 }

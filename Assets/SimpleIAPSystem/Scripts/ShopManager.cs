@@ -3,27 +3,23 @@
  * 	You shall not license, sublicense, sell, resell, transfer, assign, distribute or
  * 	otherwise make available to any third party the Service or the Content. */
 
-using UnityEngine;
-using System;
-using System.Collections;
+ using System;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace SIS
 {
     /// <summary>
-    /// instantiates shop items in the scene,
+    /// Instantiates shop items in the scene,
     /// unlocks/locks and selects/deselects shop items based on previous purchases/selections.
     /// Called after database initialization
     /// </summary>
     public class ShopManager : MonoBehaviour
     {
         /// <summary>
-        /// whether this script should print debug messages
+        /// static reference to this script
         /// </summary>
-        public bool debug;
-
-        //static reference of this script
         private static ShopManager instance;
 		
         /// <summary>
@@ -40,8 +36,8 @@ namespace SIS
         /// "parent" transform. This is because IAP Manager is a prefab that exists during
         /// scene changes, thus can't keep scene-specific data like transforms. 
         /// </summary>
-        //[HideInInspector]
-        public List<Container> containers = new List<Container>();
+        [HideInInspector]
+        public List<ShopContainer> containers = new List<ShopContainer>();
 
         /// <summary>
         /// instantiated shop items, ordered by their ID
@@ -72,17 +68,15 @@ namespace SIS
         }
 
 
-        /// <summary>
-        /// if there is no IAP Manager in the scene,
-        /// Shop Manager will try to instantiate the prefab
-        /// </summary>
+        //if there is no IAP Manager in the scene,
+        //the Shop Manager will try to instantiate the prefab
         void Start()
         {
             if (!IAPManager.GetInstance())
             {
-                Debug.LogWarning("ShopManager: Could not find IAP Manager prefab. Have you placed it in the first scene "
-                               + "of your app and started from there? Instantiating copy.");
-                GameObject obj = Instantiate(Resources.Load("IAP Manager", typeof(GameObject))) as GameObject;
+                Debug.LogWarning("ShopManager: Could not find IAPManager prefab. Have you placed it in the first scene "
+                               + "of your app and started from there? Instantiating temporary copy...");
+                GameObject obj = Instantiate(Resources.Load("IAPManager", typeof(GameObject))) as GameObject;
                 //remove clone tag from its name. not necessary, but nice to have
                 obj.name = obj.name.Replace("(Clone)", "");
             }
@@ -90,7 +84,7 @@ namespace SIS
 		
 
         /// <summary>
-        /// returns a static reference to this script
+        /// Returns a static reference to this script.
         /// </summary>
         public static ShopManager GetInstance()
         {
@@ -105,7 +99,7 @@ namespace SIS
             IAPItems.Clear();
 
             //get list of all shop groups from IAPManager
-            List<IAPGroup> list = IAPManager.GetIAPs();
+            List<IAPGroup> list = IAPManager.GetInstance().IAPs;
             int index = 0;
 
             //loop over groups
@@ -113,16 +107,11 @@ namespace SIS
             {
                 //cache current group
                 IAPGroup group = list[i];
-                Container container = GetContainer(group.id);
+                ShopContainer container = GetContainer(group.id);
 
                 //skip group if prefab or parent wasn't set
                 if (container == null || container.prefab == null || container.parent == null)
-                {
-                    if (debug)
-                        Debug.LogWarning("Setting up Shop, but prefab or parent of Group: '"
-                                         + group.name + "' isn't set. Skipping group.");
                     continue;
-                }
 
                 //loop over items
                 for (int j = 0; j < group.items.Count; j++)
@@ -131,7 +120,7 @@ namespace SIS
                     IAPObject obj = group.items[j];
                     //instantiate shop item in the scene and attach it to the defined parent transform
                     GameObject newItem = (GameObject)Instantiate(container.prefab);
-                    newItem.transform.SetParent(container.parent, false);
+                    newItem.transform.SetParent(container.parent.transform, false);
                     newItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
                     //rename item to force ordering as set in the IAP Settings editor
                     newItem.name = "IAPItem " + string.Format("{0:000}", index + j);
@@ -144,7 +133,7 @@ namespace SIS
 
                     //upgrades overwrite, an IAP Item gets replaced with its current level
                     List<string> upgrades = IAPManager.GetIAPUpgrades(obj.id);
-                    if (upgrades.Count > 0)
+                    if (upgrades != null && upgrades.Count > 0)
                     {
                         for (int k = 0; k < upgrades.Count; k++)
                             IAPItems.Add(upgrades[k], item);
@@ -166,9 +155,9 @@ namespace SIS
 
 
         /// <summary>
-        /// sets up shop items based on previous purchases, meaning we
+        /// Sets up shop items based on previous purchases, meaning we
         /// set them to 'purchased' thus not purchasable in the GUI.
-        /// Also select the items that were selected by the player before
+        /// Also select the items that were selected by the player before.
         /// </summary>
         public static void SetItemState()
         {
@@ -197,9 +186,9 @@ namespace SIS
 
 
         /// <summary>
-        /// unlocks items if the requirement for them has been met. You can
+        /// Unlocks items if the requirement for them has been met. You can
         /// call this method at runtime whenever the player made some
-        /// progress, to ensure your shop items reflect the current state
+        /// progress, to ensure your shop items reflect the current state.
         /// </summary>
         public static void UnlockItems()
         {
@@ -208,7 +197,7 @@ namespace SIS
             if (!DBManager.GetInstance()) return;
 
             //get list of all shop groups from IAPManager
-            List<IAPGroup> list = IAPManager.GetIAPs();
+            List<IAPGroup> list = IAPManager.GetInstance().IAPs;
 
             //loop over groups
             for (int i = 0; i < list.Count; i++)
@@ -234,7 +223,7 @@ namespace SIS
                     if (!string.IsNullOrEmpty(obj.req.entry) &&
                         DBManager.isRequirementMet(obj.req))
                     {
-                        if (instance.debug) Debug.Log("requirement met for: " + obj.id);
+                        if (IAPManager.isDebug) Debug.Log("requirement met for: " + obj.id);
                         item.Unlock();
                     }
                 }
@@ -262,7 +251,7 @@ namespace SIS
 
 
         /// <summary>
-        /// sets an item to 'selected' in the database
+        /// Sets an item to 'selected' in the database.
         /// </summary>
         public static void SetToSelected(IAPItem item)
         {
@@ -277,7 +266,7 @@ namespace SIS
 
 
         /// <summary>
-        /// sets an item to 'deselected' in the database
+        /// Sets an item to 'deselected' in the database.
         /// </summary>
         public static void SetToDeselected(IAPItem item)
         {
@@ -288,9 +277,11 @@ namespace SIS
         }
 
 
-        //show feedback/error window with text received through an event:
-        //this gets called in IAPListener's HandleSuccessfulPurchase method with some feedback,
-        //or automatically with the error when a purchase failed 
+		/// <summary>
+        /// Show feedback/error window with text received through an event:
+        /// This gets called in IAPListener's HandleSuccessfulPurchase method with some feedback,
+        /// or automatically with the error when a purchase failed.
+		/// <summary>
         public static void ShowMessage(string text)
         {
             if (!instance.errorWindow) return;
@@ -301,7 +292,7 @@ namespace SIS
 
 
         /// <summary>
-        /// returns IAPItem shop item reference
+        /// Returns IAPItem shop item reference.
         /// </summary>
         public static IAPItem GetIAPItem(string id)
         {
@@ -313,9 +304,9 @@ namespace SIS
 
 
         /// <summary>
-        /// returns container for a specific group id
+        /// Returns container for a specific group id.
         /// </summary>
-        public Container GetContainer(string id)
+        public ShopContainer GetContainer(string id)
         {
             for (int i = 0; i < containers.Count; i++)
             {
@@ -328,14 +319,13 @@ namespace SIS
 
 
     /// <summary>
-    /// correlation between IAP group
-    /// and scene-specific properties
+    /// Correlation between IAP group and scene-specific properties.
     /// </summary>
     [System.Serializable]
-    public class Container
+    public class ShopContainer
     {
         public string id;
         public GameObject prefab;
-        public Transform parent;
+        public IAPContainer parent;
     }
 }

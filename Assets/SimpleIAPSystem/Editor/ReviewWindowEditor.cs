@@ -1,17 +1,16 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using UnityEditor;
 using UnityEngine;
+using SimpleJSON;
 
 namespace SIS
 {
     [InitializeOnLoad]
     public class ReviewWindowEditor : EditorWindow
     {
-        private static ReviewConfig currentConfig;
 		private static Texture2D reviewWindowImage;
-		private static string fileName = "RatingSetup";
 		private static string imagePath = "/EditorFiles/Asset_smallLogo.png";
+		private static string keyName = "SimpleIAPSystem-Review";
 
 		
         static ReviewWindowEditor()
@@ -24,14 +23,18 @@ namespace SIS
 		{
 			EditorApplication.update -= Startup;
 			
-			if (ReviewWindowEditor.Current == null)
-                return;
+			if (!EditorPrefs.HasKey(keyName))
+			{
+                JSONNode data = new JSONClass();
+				data["active"].AsBool = true;
+				EditorPrefs.SetString(keyName, data.ToString());
+			}
 			
 			Count();
 		}
 
 
-        [MenuItem("Window/Simple IAP System/Review")]
+        [MenuItem("Window/Simple IAP System/Review Asset")]
         static void Init()
         {
             EditorWindow.GetWindowWithRect(typeof(ReviewWindowEditor), new Rect(0, 0, 256, 260), false, "Review Window");
@@ -47,8 +50,15 @@ namespace SIS
 				reviewWindowImage = AssetDatabase.LoadAssetAtPath(path + imagePath, typeof(Texture2D)) as Texture2D;
 			}
 			
+			EditorGUILayout.BeginHorizontal();
+			GUILayout.Space(31);
 			GUILayout.Label(reviewWindowImage);
-			EditorGUILayout.LabelField("Review Simple IAP System");
+			EditorGUILayout.EndHorizontal();
+			
+			EditorGUILayout.BeginHorizontal();
+			GUILayout.Space(48);
+			EditorGUILayout.LabelField("Review Simple IAP System", GUILayout.Width(160));
+			EditorGUILayout.EndHorizontal();
 			
 			EditorGUILayout.Space();
             EditorGUILayout.LabelField("Please consider giving us a rating on the");
@@ -64,7 +74,11 @@ namespace SIS
             }
             if (GUILayout.Button("Later"))
             {
-				ReviewWindowEditor.Current.counter = 5;
+				JSONNode data = new JSONClass();
+				data = JSON.Parse(EditorPrefs.GetString(keyName));
+				data["counter"].AsInt = 5;
+				
+				EditorPrefs.SetString(keyName, data.ToString());
 				this.Close();
             }
 			if (GUILayout.Button("Never"))
@@ -77,19 +91,22 @@ namespace SIS
 		
 		static void Count()
 		{
-			if(!ReviewWindowEditor.Current.active) return;
+			JSONNode data = new JSONClass();
+			data = JSON.Parse(EditorPrefs.GetString(keyName));
+			
+			if(data["active"].AsBool == false)
+				return;
 			
 			double time = GenerateUnixTime();
-			double diff = time - ReviewWindowEditor.Current.lastCheck;
+			double diff = time - data["lastCheck"].AsDouble;
 			if(diff < 20) return;
 			
-			ReviewWindowEditor.Current.lastCheck = time;
-			ReviewWindowEditor.Current.counter++;
-			
-			if(ReviewWindowEditor.Current.counter > 10)
+			data["lastCheck"].AsDouble = time;
+			data["counter"].AsInt = data["counter"].AsInt + 1;
+			EditorPrefs.SetString(keyName, data.ToString());
+						
+			if(data["counter"].AsInt > 10)
 				Init();
-			
-            ReviewWindowEditor.Save();
 		}
 		
 		
@@ -102,34 +119,13 @@ namespace SIS
 
         void DisableRating()
         {
-            ReviewWindowEditor.Current.active = false;
-			ReviewWindowEditor.Current.counter = 0;
-            ReviewWindowEditor.Save();
+			JSONNode data = new JSONClass();
+			data = JSON.Parse(EditorPrefs.GetString(keyName));
+			
+			data["active"].AsBool = false;
+			data["counter"].AsInt = 0;
+			EditorPrefs.SetString(keyName, data.ToString());
 			this.Close();
-        }
-
-
-        public static ReviewConfig Current
-        {
-            get
-            {
-                if (currentConfig == null)
-                {
-                    currentConfig = Resources.Load(fileName, typeof(ReviewConfig)) as ReviewConfig;
-                }
-
-                return currentConfig;
-            }
-            set
-            {
-                currentConfig = value;
-            }
-        }
-
-
-        public static void Save()
-        {
-            EditorUtility.SetDirty(ReviewWindowEditor.Current);
         }
     }
 }
