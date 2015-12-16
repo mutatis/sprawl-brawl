@@ -56,11 +56,10 @@ public class Enemy : MonoBehaviour
         temp = velX;
 		anim.SetFloat ("VelX", velX);
         handControll.SetFloat("VelX", velX);
-        escolha = 0;//Random.Range (0, 2);
+        escolha = Random.Range (0, 2);
 		if(escolha == 0)
 		{
-            selectTakedown = 0;
-                //probabilidade.ChooseTakedown();
+            selectTakedown = probabilidade.ChooseTakedown();
                 //Random.Range(0, 3);
 		}
 		else
