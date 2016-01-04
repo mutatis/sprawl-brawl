@@ -384,6 +384,8 @@ public class Enemy : MonoBehaviour
 
     public void GameOver()
     {
+        PlayerController.player.life = 0;
+        GameMaster.master.Morreu();
         while (PlayerController.player.life > 0)
         {
             PlayerController.player.life -= 1;

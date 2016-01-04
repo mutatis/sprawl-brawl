@@ -24,6 +24,7 @@ public class PlayerController : MonoBehaviour
 	public bool esquiva;
     public bool isAttack = true;
     public bool soco;
+    public bool superPunch;
 
     public int life;
 
@@ -99,11 +100,6 @@ public class PlayerController : MonoBehaviour
 		else
 		{
 			rig.velocity = new Vector2(0, 0);
-		}
-
-		if(life <= 0)
-		{
-			Morreu();
 		}
 
 		if(!esquiva && !attack && !attackPower && !stop)
@@ -271,12 +267,6 @@ public class PlayerController : MonoBehaviour
         isAttack = false;
     }
 
-	//morreu
-	void Morreu()
-	{
-		Application.LoadLevel(level);
-	}
-
 	//entro em combate nao vai pra frente
 	public void StopPlayer()
 	{
@@ -316,7 +306,11 @@ public class PlayerController : MonoBehaviour
             {
                 enemy.anim.SetTrigger("Dano");
                 enemy.life -= 2;
-			}
+                if (superPunch)
+                {
+                    enemy.life -= 2;
+                }
+            }
             else if(enemy.selectAttack == 2)
             {
                 audioController.BlockEnemy();
@@ -347,17 +341,29 @@ public class PlayerController : MonoBehaviour
 			{
 				enemy.Dano();
 				enemy.life -= 4;
+                if(superPunch)
+                {
+                    enemy.life -= 4;
+                }
 			}
             //se der soco forte com a defesa, dano reduzido mas da stun;
             else if(enemy.selectAttack == 2)
             {
                 enemy.Stun();
                 enemy.life -= 1;
+                if (superPunch)
+                {
+                    enemy.life -= 1;
+                }
             }
             else
             {
                 enemy.Stun();
                 enemy.life -=4;
+                if (superPunch)
+                {
+                    enemy.life -= 4;
+                }
             }
 		}
 	}
