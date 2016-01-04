@@ -29,6 +29,8 @@ public class PlayerController : MonoBehaviour
 
 	public float velX = 3;
 
+    public string level = "GameOver";
+
 	float temp;
     float dist;
 
@@ -272,7 +274,7 @@ public class PlayerController : MonoBehaviour
 	//morreu
 	void Morreu()
 	{
-		Application.LoadLevel("GameOver");
+		Application.LoadLevel(level);
 	}
 
 	//entro em combate nao vai pra frente
