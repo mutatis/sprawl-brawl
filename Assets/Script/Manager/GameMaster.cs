@@ -13,11 +13,12 @@ public class GameMaster : MonoBehaviour
 
 	[HideInInspector]
 	public int vitorias;
+    public int tipo;
 
 	void Awake()
 	{
 		master = this;
-        Time.timeScale = 0;
+        Time.timeScale = 1;
     }
 
    /* void Start()

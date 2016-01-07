@@ -385,7 +385,14 @@ public class Enemy : MonoBehaviour
     public void GameOver()
     {
         PlayerController.player.life = 0;
-        GameMaster.master.Morreu();
+        if (GameMaster.master.tipo == 0)
+        {
+            GameMaster.master.Morreu();
+        }
+        else
+        {
+            Application.LoadLevel("Tchokes");
+        }
         while (PlayerController.player.life > 0)
         {
             PlayerController.player.life -= 1;
